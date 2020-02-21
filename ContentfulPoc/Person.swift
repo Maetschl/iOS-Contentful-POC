@@ -18,7 +18,7 @@ final class Person: EntryDecodable, FieldKeysQueryable, Resource {
     var localeCode: String?
 
     let name: String
-    let image: Link?
+    var image: Asset?
     let location: Location?
 
     public required init(from decoder: Decoder) throws {
@@ -29,8 +29,11 @@ final class Person: EntryDecodable, FieldKeysQueryable, Resource {
         createdAt       = sys.createdAt
         let fields      = try decoder.contentfulFieldsContainer(keyedBy: Person.FieldKeys.self)
         self.name = try fields.decodeIfPresent(String.self, forKey: .name) ?? " "
-        self.image = try fields.decodeIfPresent(Link.self, forKey: .image)
         self.location = try fields.decodeIfPresent(Location.self, forKey: .location)
+
+        try fields.resolveLink(forKey: .image, decoder: decoder) { [weak self] asset in
+            self?.image = asset as? Asset
+        }
     }
 
     enum FieldKeys: String, CodingKey {
